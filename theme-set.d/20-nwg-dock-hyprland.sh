@@ -1,6 +1,7 @@
 #!/bin/bash
 
 output_file="$HOME/.config/omarchy/current/theme/nwg-dock.css"
+icon_size=22
 
 if [[ ! -f "$output_file" ]]; then
     cat > "$output_file" << EOF
@@ -64,6 +65,6 @@ fi
 
 cp "$output_file" "$HOME/.config/nwg-dock-hyprland/colors.css"
 killall nwg-dock-hyprland
-nwg-dock-hyprland -r -mb 10 -mt 10 -i 22 -x -nolauncher & disown
+nwg-dock-hyprland -r -mb 10 -mt 10 -i $icon_size -x -nolauncher & disown
 
 success "Dock theme updated!"
