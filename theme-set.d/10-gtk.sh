@@ -170,10 +170,10 @@ create_dynamic_theme() {
         background-color: @red;
     }
 
-    .svg-icon {
+    /* .svg-icon {
         filter: invert(79%) sepia(18%) saturate(611%) hue-rotate(192deg)
             brightness(103%) contrast(94%);
-    }
+    } */
 EOF
 }
 
