@@ -27,7 +27,9 @@ fi
 gsettings set org.gnome.desktop.interface gtk-theme Adwaita > /dev/null 2>&1
 
 # Remove Vicinae theme
-vicinae theme set vicinae-dark > /dev/null 2>&1
+if command -v vicinae >/dev/null 2>&1; then
+    vicinae theme set vicinae-dark > /dev/null 2>&1
+fi
 
 echo "Uninstalled theme hook!"
 
