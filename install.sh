@@ -42,7 +42,7 @@ chmod +x $HOME/.config/omarchy/hooks/theme-set
 chmod +x $HOME/.config/omarchy/hooks/theme-set.d/*
 
 # Update Omarchy theme
-echo "Executing theme hook.."
+echo "Running theme hook.."
 omarchy-hook theme-set
 
 omarchy-show-done
