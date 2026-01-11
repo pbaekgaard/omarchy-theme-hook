@@ -20,14 +20,14 @@ fi
 
 # Remove Spotify theme
 if command -v spicetify >/dev/null 2>&1; then
-    spicetify restore
+    spicetify restore > /dev/null 2>&1
 fi
 
 # Remove GTK theme
-gsettings set org.gnome.desktop.interface gtk-theme Adwaita
+gsettings set org.gnome.desktop.interface gtk-theme Adwaita > /dev/null 2>&1
 
 # Remove Vicinae theme
-vicinae theme set vicinae-dark
+vicinae theme set vicinae-dark > /dev/null 2>&1
 
 echo "Uninstalled theme hook!"
 
