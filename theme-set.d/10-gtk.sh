@@ -202,9 +202,11 @@ else
 fi
 
 if [ -f "$light_file" ]; then
+    gsettings set org.gnome.desktop.interface color-scheme "prefer-light"
     gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-tmp
     gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3
 else
+    gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
     gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-tmp-dark
     gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark
 fi
