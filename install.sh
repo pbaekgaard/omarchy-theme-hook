@@ -33,6 +33,10 @@ mv -f /tmp/theme-hook/theme-set $HOME/.config/omarchy/hooks/
 mkdir -p $HOME/.config/omarchy/hooks/theme-set.d/
 mv -f /tmp/theme-hook/theme-set.d/* $HOME/.config/omarchy/hooks/theme-set.d/
 
+# Install TMUX system info scripts (CPU PERCENTAGE, RAM USAGE ETC.)
+mkdir -p $HOME/.config/tmux/scripts
+mv -f /tmp/theme-hook/scripts/* $HOME/.config/tmux/scripts/
+
 # Remove any new temp files
 rm -rf /tmp/theme-hook
 
