@@ -2,7 +2,6 @@
 # Sync jellyfin-tui Omarchy theme from Omarchy (kitty) colors
 # Called by theme-set hook
 
-THEME="$1"
 KITTY_CONF="$HOME/.config/omarchy/current/theme/kitty.conf"
 JELLYFIN_CONF="$HOME/.config/jellyfin-tui/config.yaml"
 
@@ -11,39 +10,115 @@ JELLYFIN_CONF="$HOME/.config/jellyfin-tui/config.yaml"
 
 # Extract colors from kitty.conf
 get_color() { grep "^${1}\s" "$KITTY_CONF" | awk '{print $2}'; }
-
-accent=$(get_color color2)    # Green — focus / active
-focus=$(get_color color4)   # Blue — accent / progress
-
+accent=$(get_color color2)
+focus=$(get_color color4)
 [[ -z "$focus" || -z "$accent" ]] && exit 0
 
-awk -v focus="$focus" -v accent="$accent" '
-  BEGIN { in_theme=0 }
+tmpfile="${JELLYFIN_CONF}.tmp"
 
-  /^[[:space:]]*- name: "Omarchy"/ {
-    in_theme=1
-  }
+# Flags
+has_themes=false
+has_auto_color=false
+has_omarchy=false
 
-  in_theme && /^[[:space:]]*border_focused:/ {
-    sub(/:.*/, ": \"" focus "\"")
-  }
+# Check current config for existing values
+while IFS= read -r line; do
+    trimmed="${line#"${line%%[![:space:]]*}"}"
+    [[ "$trimmed" == themes:* ]] && has_themes=true
+    [[ "$trimmed" =~ ^auto_color:\ (true|false)$ ]] && has_auto_color=true
+    [[ "$trimmed" == '- name: "Omarchy"' ]] && has_omarchy=true
+done < "$JELLYFIN_CONF"
 
-  in_theme && /^[[:space:]]*tab_active_foreground:/ {
-    sub(/:.*/, ": \"" focus "\"")
-  }
+# Build new file
+> "$tmpfile"
 
-  in_theme && /^[[:space:]]*progress_fill:/ {
-    sub(/:.*/, ": \"" accent "\"")
-  }
+insert_auto_color=false
+insert_omarchy=false
 
-  in_theme && /^[[:space:]]*accent:/ {
-    sub(/:.*/, ": \"" accent "\"")
-  }
+while IFS= read -r line; do
+    trimmed="${line#"${line%%[![:space:]]*}"}"
 
-  in_theme && /^[[:space:]]*- name:/ && $0 !~ /"Omarchy"/ {
-    in_theme=0
-  }
+    # Skip existing auto_color (we'll insert/update later)
+    if [[ "$trimmed" =~ ^auto_color:\ (true|false)$ ]]; then
+        [[ "$has_auto_color" == true ]] && echo "auto_color: false" >> "$tmpfile"
+        continue
+    fi
 
-  { print }
-' "$JELLYFIN_CONF" > "${JELLYFIN_CONF}.tmp" \
-  && mv "${JELLYFIN_CONF}.tmp" "$JELLYFIN_CONF"
+    # Detect themes line
+    if [[ "$trimmed" == themes:* ]]; then
+        # Insert auto_color above themes if missing
+        if [[ "$has_auto_color" == false ]]; then
+            echo "auto_color: false" >> "$tmpfile"
+            has_auto_color=true
+        fi
+        echo "$line" >> "$tmpfile"
+
+        # Insert Omarchy theme if missing
+        if [[ "$has_omarchy" == false ]]; then
+            cat <<EOF >> "$tmpfile"
+  - name: "Omarchy"
+    base: "Dark"
+
+    # remove background
+    background: "none"
+
+    border: "white"
+    border_focused: "$focus"
+    tab_active_foreground: "$focus"
+    tab_inactive_foreground: "white"
+
+    progress_fill: "$accent"
+    accent: "$accent"
+
+EOF
+            has_omarchy=true
+        fi
+        continue
+    fi
+
+    # Detect Omarchy theme block start
+    if [[ "$trimmed" == '- name: "Omarchy"' ]]; then
+        echo "$line" >> "$tmpfile"
+        in_omarchy=true
+        continue
+    fi
+
+    # Update Omarchy colors if inside block
+    if [[ "$in_omarchy" == true ]]; then
+        case "$trimmed" in
+            border_focused:*) echo "    border_focused: \"$focus\"" >> "$tmpfile" ;;
+            tab_active_foreground:*) echo "    tab_active_foreground: \"$focus\"" >> "$tmpfile" ;;
+            progress_fill:*) echo "    progress_fill: \"$accent\"" >> "$tmpfile" ;;
+            accent:*) echo "    accent: \"$accent\"" >> "$tmpfile" ;;
+            -*) in_omarchy=false; echo "$line" >> "$tmpfile" ;; # another theme starts
+            *) echo "$line" >> "$tmpfile" ;;
+        esac
+        continue
+    fi
+
+    # Default: copy line
+    echo "$line" >> "$tmpfile"
+done < "$JELLYFIN_CONF"
+
+# If themes: didn't exist at all, create it at the end
+if [[ "$has_themes" == false ]]; then
+    [[ "$has_auto_color" == false ]] && echo "auto_color: false" >> "$tmpfile"
+    echo "themes:" >> "$tmpfile"
+    cat <<EOF >> "$tmpfile"
+  - name: "Omarchy"
+    base: "Dark"
+
+    # remove background
+    background: "none"
+
+    border: "white"
+    border_focused: "$focus"
+    tab_active_foreground: "$focus"
+    tab_inactive_foreground: "white"
+
+    progress_fill: "$accent"
+    accent: "$accent"
+EOF
+fi
+
+mv "$tmpfile" "$JELLYFIN_CONF"
